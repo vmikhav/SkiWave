@@ -13,11 +13,14 @@ function preload() {
 
 var player;
 var facing = 'left';
+var isTap = false;
 var jumpTimer = 0;
 var cursors;
 var jumpButton;
 var PI = 3.14;
-var PI2 = PI/3;
+var PI2 = 8*PI/18;
+var PI3 = PI/3;
+var PI4 = PI/4;
 var oldSpeed = 0;
 
 var onGround = false;
@@ -26,6 +29,8 @@ var map;
 var layer, layer2;
 
 var inTerrain=0;
+var forceVector = 0;
+var rotation = 0;
 
 function create() {
 
@@ -42,20 +47,12 @@ function create() {
 	
 	layer2.resizeWorld();
 	layer.resizeWorld();
-	
-
-	//  Set the tiles for collision.
-	//  Do this BEFORE generating the p2 bodies below.
-	//map.setCollisionBetween(11, 220);
-
-	//  Convert the tilemap layer into bodies. Only tiles that collide (see above) are created.
-	//  This call returns an array of body objects which you can perform addition actions on if
-	//  required. There is also a parameter to control optimising the map build.
-	//game.physics.p2.convertTilemap(map, layer);
 
 	var layerobjects_tiles = game.physics.p2.convertCollisionObjects(map,"objects1");
 
 	game.physics.p2.restitution = 0.0;
+	game.physics.p2.stiffness = 200;
+	//game.physics.p2.relaxation = 0.1;
 	game.physics.p2.gravity.y = 1400;
 	game.physics.p2.applyGravity = true;
 	//game.physics.p2.gravity.x = 200;
@@ -76,6 +73,7 @@ function create() {
 	//var boxMaterial = game.physics.p2.createMaterial('worldMaterial');
 
 	player.body.damping = 0.1;
+	player.body.angularDamping = 0.5;
 	player.body.collideWorldBounds = true;
 	
 	
@@ -88,55 +86,63 @@ function create() {
 	player.body.onBeginContact.add(blockHit, this);
 	player.body.onEndContact.add(blockUnHit, this);
 
-	cursors = game.input.keyboard.createCursorKeys();
-	jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+	//cursors = game.input.keyboard.createCursorKeys();
+	//jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 
-	game.input.onTap.add(onTap, this);
+	game.input.onDown.add(onTap, this);
+	game.input.onUp.add(onUnTap, this);
 
 }
 
 function update() {
-	//console.log(player.body.velocity.y);
-	if (player.body.velocity.y<0.9 && player.body.velocity.y>-0.9){
-		if (Math.abs(player.body.velocity.x)>10 && Math.abs(player.body.rotation)>0.2){
-			//console.log("goal");
-			player.body.rotation=0;
-			player.body.angularForce=0;
+	forceVector = player.body.velocity.y * player.body.velocity.x;
+	rotation = player.body.rotation%PI;
+	//console.log(player.body.angularForce);
+	if (inTerrain){
+		if (player.body.velocity.y<0.9 && player.body.velocity.y>-0.9){
+			if (Math.abs(player.body.velocity.x)>10 && Math.abs(rotation)>PI4){
+				//console.log("goal");
+				player.body.rotation=0;
+				player.body.angularForce=0;
+			}
+		}
+		else if (forceVector > 0){
+			if (rotation<-0.1 && oldSpeed*player.body.velocity.x>0){
+				//console.log("goal2");
+				player.body.rotation=0;
+				player.body.angularForce=75;
+			}
+			else if (rotation>PI2){
+				player.body.rotation=PI3;
+			}
+		}
+		else if (forceVector < 0){
+			if (rotation>0.1){
+				//console.log("goal3", rotation);
+				player.body.rotation=0;
+				player.body.angularForce=-75;
+			}
+			else if (rotation<-PI2){
+				player.body.rotation=-PI3;
+			}
 		}
 	}
-	else if (player.body.velocity.y * player.body.velocity.x > 0){
-		if (player.body.rotation<-0.1 && oldSpeed*player.body.velocity.x>0){
-			//console.log("goal2");
-			player.body.rotation=0;
-			player.body.angularForce=100;
-		}		
-	}
-	else if (player.body.velocity.y * player.body.velocity.x < 0){
-		if (player.body.rotation>0.1){
-			//console.log("goal3");
-			player.body.rotation-=0.2;
-			player.body.angularForce=-100;
-		}
+	else{
+		if (rotation>PI4){player.body.rotation=PI4-0.05;}
+		else if (rotation<-PI4){player.body.rotation=-PI4+0.05;}
 	}
 	oldSpeed = player.body.velocity.x;
-	
-	
-	if (cursors.left.isDown)
-	{
-		player.body.force.x = -1200;
-		//player.body.data.force[0] = 100;//moveLeft(200);
 
-		if (facing != 'left')
-		{
-			player.animations.play('right');
-			facing = 'left';
+	if (isTap){
+		if (inTerrain){
+			if (player.body.velocity.y>0){
+				player.body.force.y += 500;
+			}
+			/*else if (player.body.velocity.y<-5){
+				player.body.angularForce=-50;
+			}*/
 		}
-	}
-	else if (cursors.right.isDown)
-	{
-		player.body.force.x = 1200;//.moveRight(200);
-		if (player.body.velocity.y>0){player.body.force.y += 5000;}
-
+		player.body.force.x += 750;
 		if (facing != 'right')
 		{
 			player.animations.play('right');
@@ -161,17 +167,14 @@ function update() {
 		}
 		
 	}
-	
-	if (jumpButton.isDown && game.time.now > jumpTimer && checkIfCanJump())
-	{
-		player.body.force.y = -50000;
-		jumpTimer = game.time.now + 750;
-	}
-
 }
 
 function onTap(pointer, doubleTap) {
-	//magic
+	isTap = true;
+}
+function onUnTap(pointer, doubleTap) {
+	isTap = false;
+	player.body.angularForce = 0;
 }
 
 function blockHit (body, bodyB, shapeA, shapeB, equation) {
@@ -200,28 +203,6 @@ function blockUnHit (body, bodyB, shapeA, shapeB, equation) {
 	{
 		//console.log("wall");
 	}
-
-}
-
-
-function checkIfCanJump() {
-
-	var yAxis = p2.vec2.fromValues(0, 1);
-	var result = false;
-
-	for (var i = 0; i < game.physics.p2.world.narrowphase.contactEquations.length; i++)
-	{
-		var c = game.physics.p2.world.narrowphase.contactEquations[i];
-
-		if (c.bodyA === player.body.data || c.bodyB === player.body.data)
-		{
-			var d = p2.vec2.dot(c.normalA, yAxis); // Normal dot Y-axis
-			if (c.bodyA === player.body.data) d *= -1;
-			if (d > 0.5) result = true;
-		}
-	}
-	
-	return result;
 
 }
 
