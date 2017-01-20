@@ -25,6 +25,8 @@ var onGround = false;
 var map;
 var layer, layer2;
 
+var inTerrain=0;
+
 function create() {
 
 	game.physics.startSystem(Phaser.Physics.P2JS);
@@ -88,6 +90,8 @@ function create() {
 
 	cursors = game.input.keyboard.createCursorKeys();
 	jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+
+	game.input.onTap.add(onTap, this);
 
 }
 
@@ -166,25 +170,35 @@ function update() {
 
 }
 
+function onTap(pointer, doubleTap) {
+	//magic
+}
+
 function blockHit (body, bodyB, shapeA, shapeB, equation) {
 	if (body)
 	{
-		if (body.sprite===null){ onGround = true; }//console.log(onGround);}
+		if (body.sprite===null){ 
+			onGround = true; 
+			inTerrain++;
+		}
 	}
 	else
 	{
-		console.log("wall");
+		//console.log("wall");
 	}
 
 }
 function blockUnHit (body, bodyB, shapeA, shapeB, equation) {
 	if (body)
 	{
-		if (body.sprite===null){ onGround = false; }
+		if (body.sprite===null){ 
+			onGround = false;
+			inTerrain--;
+		}
 	}
 	else
 	{
-		console.log("wall");
+		//console.log("wall");
 	}
 
 }
