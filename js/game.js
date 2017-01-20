@@ -1,13 +1,16 @@
 var innerWidth = window.innerWidth;
 var innerHeight = window.innerHeight;
-var gameRatio = innerWidth/innerHeight;	
-var game = new Phaser.Game(Math.floor(1000*gameRatio), 1000, Phaser.AUTO, 'phaser-example', { preload: preload, create: create, update: update, render: render });
+var gameRatio = innerWidth/innerHeight;
+var w = Math.floor(1000*gameRatio);
+var h = 1000;
+var game = new Phaser.Game(w, h, Phaser.AUTO, 'phaser-example', { preload: preload, create: create, update: update, render: render });
 
 function preload() {
 	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 	game.load.tilemap('map', './map/test.json', null, Phaser.Tilemap.TILED_JSON);
 	game.load.image('kenney', './img/kenney.png');
 	game.load.spritesheet('dude', './img/pilot_animation.png', 64, 64);
+    game.load.image('menu', './img/buttons.png', 270, 180);
 
 }
 
@@ -28,6 +31,78 @@ var layer, layer2;
 var inTerrain=0;
 
 function create() {
+
+  /*
+   Code for the pause menu
+   */
+
+  // Create a label to use as a button
+  pause_label = game.add.text(w - 100, 20, 'Pause', {font: '24px Arial', fill: '#fff'});
+  pause_label.inputEnabled = true;
+  pause_label.events.onInputUp.add(pause);
+
+  // Add a input listener that can help us return from being paused
+  game.input.onDown.add(unpause, self);
+  game.input.keyboard.addKey(Phaser.Keyboard.ESC).onDown.add(escHandler, self);
+
+  function escHandler() {
+    if(game.paused) {
+      destroyMenu();
+    } else {
+      pause();
+    }
+  }
+
+  function pause(event) {
+    // When the paus button is pressed, we pause the game
+    game.paused = true;
+
+    // Then add the menu
+    menu = game.add.sprite(w / 2, h / 2, 'menu');
+    menu.anchor.setTo(0.5, 0.5);
+
+    // And a label to illustrate which menu item was chosen. (This is not necessary)
+    choiseLabel = game.add.text(w / 2, h - 150, 'Click outside menu to continue', {font: '30px Arial', fill: '#fff'});
+    choiseLabel.anchor.setTo(0.5, 0.5);
+  }
+
+  function destroyMenu() {
+    // Remove the menu and the label
+    menu.destroy();
+    choiseLabel.destroy();
+
+    // Unpause the game
+    game.paused = false;
+  }
+
+  // unpause menu
+  function unpause(event) {
+    // Only act if paused
+    if (game.paused) {
+      // Calculate the corners of the menu
+      var x1 = w / 2 - 270 / 2, x2 = w / 2 + 270 / 2,
+          y1 = h / 2 - 180 / 2, y2 = h / 2 + 180 / 2;
+
+      // Check if the click was inside the menu
+      if (event.x > x1 && event.x < x2 && event.y > y1 && event.y < y2) {
+        // The choicemap is an array that will help us see which item was clicked
+        var choisemap = ['one', 'two', 'three', 'four', 'five', 'six'];
+
+        // Get menu local coordinates for the click
+        var x = event.x - x1,
+            y = event.y - y1;
+
+        // Calculate the choice
+        var choise = Math.floor(x / 90) + 3 * Math.floor(y / 90);
+
+        // Display the choice
+        choiseLabel.text = 'You chose menu item: ' + choisemap[choise];
+      }
+      else {
+        destroyMenu();
+      }
+    }
+  };
 
 	game.physics.startSystem(Phaser.Physics.P2JS);
 
