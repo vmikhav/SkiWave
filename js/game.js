@@ -3,13 +3,14 @@ var innerHeight = window.innerHeight;
 var gameRatio = innerWidth/innerHeight;
 var w = Math.floor(910*gameRatio);
 var h = 910;
-var game = new Phaser.Game(w, h, Phaser.AUTO, 'phaser-example', { preload: preload, create: create, update: update, render: render });
+var game = new Phaser.Game(w, h, Phaser.AUTO, 'ShiWave', { preload: startPreload, create: startCreate, update: startUpdate, render: render });
 
 function preload() {
 	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 	game.load.tilemap('map', './map/test.json', null, Phaser.Tilemap.TILED_JSON);
 	game.load.image('kenney', './img/kenney.png');
 	game.load.image('background', './img/background.png');
+	game.load.image('filter', './img/filter.png');
 	game.load.spritesheet('dude', './img/pilot_animation.png', 100, 100);
 	game.load.spritesheet('wave', './img/wave.png', 1100, 1000);
 	game.load.image('menu', './img/buttons.png', 270, 180);
@@ -18,7 +19,7 @@ function preload() {
 
 }
 
-var player, background;
+var player, background, filter;
 var nothlights = [];
 var bonus = [];
 var facing = 'left';
@@ -129,10 +130,10 @@ function create() {
 		// background = game.add.sprite(0, 0, 'background');
 		// background.fixedToCamera = true;
 
-				// backgroundmenu = game.add.sprite(0, 0, 800, 600, 'backgroundmenu', 'backgroundmenu');
+		// backgroundmenu = game.add.sprite(0, 0, 800, 600, 'backgroundmenu', 'backgroundmenu');
 		// Then add the menu
-        console.log(player.position.x);
-        var centerXPos = (player.position.x > w / 2) ? player.position.x : w / 2;
+				//console.log(player.position.x);
+		var centerXPos = (player.position.x > w / 2) ? player.position.x : w / 2;
 		//menu = game.add.sprite(centerXPos, h / 2, 'menu');
 		//menu.anchor.setTo(0.5, 0.5);
 
@@ -144,7 +145,7 @@ function create() {
 	function destroyMenu() {
 		// Remove the menu and the label
 		//menu.destroy();
-        // backgroundmenu.destroy();
+				// backgroundmenu.destroy();
 		choiseLabel.destroy();
 		background.destroy();
 
@@ -386,9 +387,9 @@ function blockHit (body, bodyB, shapeA, shapeB, equation) {
 		else{
 			if (body.sprite.key == 'wave'){
 				//lose
-				console.log('lose');
+				
 				endType = 'die';
-				game.state.start('main');
+				game.state.start('lose');
 			}
 			else if (body.sprite.key == 'bonus'){
 				body.sprite.destroy();
@@ -400,7 +401,7 @@ function blockHit (body, bodyB, shapeA, shapeB, equation) {
 	else
 	{
 		//win;
-		console.log("win");
+		//console.log("win");
 		endType = 'win';
 		oldSpeed = player.body.velocity.x;
 		game.state.start('main');
@@ -432,4 +433,118 @@ function blockUnHit (body, bodyB, shapeA, shapeB, equation) {
 
 function render() {
 
+}
+
+var timerEvt;
+var menuState = {preload: menuPreload, create: menuCreate, update: menuUpdate};
+game.state.add('menu', menuState); 
+var loseState = {preload: losePreload, create: loseCreate, update: loseUpdate};
+game.state.add('lose', loseState); 
+
+function startPreload() {
+	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+
+	game.load.tilemap('map', './map/test.json', null, Phaser.Tilemap.TILED_JSON);
+	game.load.image('kenney', './img/kenney.png');
+	game.load.image('background', './img/background.png');
+	game.load.image('filter', './img/filter.png');
+	game.load.spritesheet('dude', './img/pilot_animation.png', 100, 100);
+	game.load.spritesheet('wave', './img/wave.png', 1100, 1000);
+	game.load.image('menu', './img/buttons.png', 270, 180);
+	game.load.spritesheet('bonus', './img/bonus.png', 70, 70);
+	game.load.spritesheet('nothlights', './img/nothlights.png', 500, 300);
+
+	var loadingText = game.add.text(w/2, h/2, 'loading... 0%', { font: '64px super_mario_256regular', fill: '#fff800' });
+	loadingText.anchor.setTo(0.5, 0.5);
+
+	var progressDisplay = 0;
+
+	timerEvt = game.time.events.loop(100, function (){
+		if(progressDisplay < 100){
+			if(progressDisplay < game.load.progress){
+				loadingText.text = 'loading... '+(game.load.progress)+'%';
+			}
+		}else{
+			loadingText.text = 'Ready, Go!';
+			game.time.events.remove(timerEvt);
+		}
+	}, this);
+	
+}
+
+function startCreate() {
+	game.time.events.remove(timerEvt);
+	game.state.start('menu');
+}
+
+function startUpdate() {}
+
+function menuPreload() {
+	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+
+	game.load.image('background', './img/background.png');
+	game.load.image('filter', './img/filter.png');
+}
+
+function menuCreate() {
+	background = game.add.sprite(0, 0, 'background');
+	background.fixedToCamera = true;
+	background.x = 0;
+	background.y = 0;
+	background.height = game.height;
+	background.width = game.width;
+
+	filter = game.add.sprite(0, 0, 'filter');
+	filter.fixedToCamera = true;
+	filter.x = 0;
+	filter.y = 0;
+	filter.height = game.height;
+	filter.width = game.width;
+
+	var gameLabel = game.add.text(w / 2, 200, 'SkiWave', {font: '164px super_mario_256regular', fill: '#fff800'});
+	gameLabel.anchor.setTo(0.5, 0.5);
+
+	var playLabel = game.add.text(w / 2, h / 2 - 50, "click here or press\nspaceBar to start", {font: '54px super_mario_256regular', fill: '#FFD800'});
+	playLabel.inputEnabled = true;
+	playLabel.events.onInputDown.add(function(){game.state.start('main');});
+	playLabel.anchor.setTo(0.5, 0.5);
+
+	var aboutLabel = game.add.text(w / 2, h / 2 + 150, "aBout", {font: '54px super_mario_256regular', fill: '#fff800'});
+	aboutLabel.inputEnabled = true;
+	aboutLabel.events.onInputDown.add(function(){game.state.start('main');});
+	aboutLabel.anchor.setTo(0.5, 0.5);
+
+	jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+}
+
+function menuUpdate() {
+	if (jumpButton.isDown){
+		game.state.start('main');
+	}
+}
+
+function losePreload() {
+	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+
+	game.load.image('background', './img/background.png');
+
+	score = Math.ceil(score);
+}
+
+function loseCreate() {
+	var loseScoreLabel = game.add.text(w / 2, 150, "your score : "+score, {font: '54px super_mario_256regular', fill: '#fff800'});
+	loseScoreLabel.anchor.setTo(0.5, 0.5);
+
+	var playLabel = game.add.text(w / 2, h - 150, "click here or press spaceBar", {font: '54px super_mario_256regular', fill: '#fff800'});
+	playLabel.inputEnabled = true;
+	playLabel.events.onInputDown.add(function(){game.state.start('menu');});
+	playLabel.anchor.setTo(0.5, 0.5);
+
+	jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+}
+
+function loseUpdate() {
+	if (jumpButton.isDown){
+		game.state.start('main');
+	}
 }
