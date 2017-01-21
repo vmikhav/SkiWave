@@ -11,12 +11,15 @@ function preload() {
 	game.load.image('kenney', './img/kenney.png');
 	game.load.image('background', './img/background.png');
 	game.load.spritesheet('dude', './img/pilot_animation.png', 100, 100);
-	game.load.spritesheet('wave', './img/wave.png', 1232, 1000);
+	game.load.spritesheet('wave', './img/wave.png', 1100, 1000);
 	game.load.image('menu', './img/buttons.png', 270, 180);
+
+	game.load.spritesheet('nothlights', './img/nothlights.png', 500, 300);
 
 }
 
 var player, background;
+var nothlights = [];
 var facing = 'left';
 var isTap = false;
 var jumpTimer = 0;
@@ -28,6 +31,7 @@ var PI3 = PI/3;
 var PI4 = PI/4;
 var PI5 = PI/30;
 var oldSpeed = 0;
+var waveSpeed;
 
 var onGround = false;
 
@@ -56,6 +60,7 @@ function create() {
 	facing = 'left';
 	isTap = false;
 	jumpTimer = 0;
+	jumpTime=0;
 	startTime=0; 
 
 	/*
@@ -70,7 +75,14 @@ function create() {
 	if (endType == 'die' || endType == ''){
 		score = 0;
 		oldSpeed = 0;
-		jumpTime=0;
+		waveSpeed = 115;
+	}
+
+	nothlights.length = 0;
+	for (var i=0; i<13; i++){
+		nothlights.push(game.add.sprite(10000*i+Math.ceil(Math.random()*1000), Math.ceil(Math.random()*50), 'nothlights'));
+		nothlights[i].animations.add('nothlights', [0, 1, 2, 3, 4], 10, true);
+		nothlights[i].animations.play('nothlights');
 	}
 
 
@@ -225,6 +237,7 @@ function create() {
 
 	if (endType == 'win'){
 		player.body.velocity.x = oldSpeed;
+		waveSpeed+=10;
 	}
 	else{
 		player.body.velocity.x = 30;
@@ -261,7 +274,7 @@ function update() {
 		}
 	}
 	startTime = player.body.x;
-	wave.body.force.x = 120;
+	wave.body.force.x = waveSpeed;
 
 	forceVector = player.body.velocity.y * player.body.velocity.x;
 	rotation = player.body.rotation%PI;
@@ -354,7 +367,7 @@ function blockHit (body, bodyB, shapeA, shapeB, equation) {
 			onGround = true; 
 			inTerrain++;
 			if (jumpTime!=0){
-				score += (player.body.x - jumpTime)/10;
+				score += (player.body.x - jumpTime)/25;
 				jumpTime = 0;
 				scoreLabel.setText(Math.ceil(score));
 				jumpTimer = 0;
