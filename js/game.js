@@ -9,13 +9,14 @@ function preload() {
 	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 	game.load.tilemap('map', './map/test.json', null, Phaser.Tilemap.TILED_JSON);
 	game.load.image('kenney', './img/kenney.png');
+	//game.load.image('background', './img/background.png');
 	game.load.spritesheet('dude', './img/pilot_animation.png', 64, 64);
 	game.load.spritesheet('wave', './img/wave.png', 1232, 1000);
-		game.load.image('menu', './img/buttons.png', 270, 180);
+	game.load.image('menu', './img/buttons.png', 270, 180);
 
 }
 
-var player;
+var player, background;
 var facing = 'left';
 var isTap = false;
 var jumpTimer = 0;
@@ -36,8 +37,31 @@ var inTerrain=0;
 var forceVector = 0;
 var rotation = 0;
 
-function create() {
+var startTime, jumpTime, score;
 
+var mainState = {preload: preload, create: create, update: update};
+game.state.add('main', mainState); 
+
+function create() {
+	//init
+	inTerrain=0;
+	forceVector = 0;
+	rotation = 0;
+	oldSpeed = 0;
+	onGround = false;	
+	facing = 'left';
+	isTap = false;
+	jumpTimer = 0;
+	startTime=0; jumpTime=0; score=0;
+
+	/*
+	background = game.add.sprite(0, 0, 'background');
+	background.fixedToCamera = true;
+	background.x = 0;
+	background.y = 0;
+	background.height = game.height;
+	background.width = game.width;
+	*/
 	/*
 	 Code for the pause menu
 	 */
@@ -45,6 +69,7 @@ function create() {
 	// Create a label to use as a button
 	pause_label = game.add.text(w - 100, 20, 'Pause', {font: '24px Arial', fill: '#fff'});
 	pause_label.inputEnabled = true;
+	pause_label.fixedToCamera = true;
 	pause_label.events.onInputUp.add(pause);
 
 	// Add a input listener that can help us return from being paused
@@ -175,11 +200,16 @@ function create() {
 	game.input.onDown.add(onTap, this);
 	game.input.onUp.add(onUnTap, this);
 
+	startTime = game.time.now;
+
 }
 
 function update() {
 
+	if (Math.abs(player.body.velocity.x)>10){score += (game.time.now - startTime)/2500; }
+	startTime = game.time.now;
 	wave.body.force.x=100;
+	console.log(score);
 
 	forceVector = player.body.velocity.y * player.body.velocity.x;
 	rotation = player.body.rotation%PI;
@@ -228,8 +258,8 @@ function update() {
 				player.body.angularForce=-50;
 			}*/
 		}
-		player.body.force.x += 750;
-		if (facing != 'right')
+		player.body.force.x = 750;
+		if (facing != 'right' && inTerrain)
 		{
 			player.animations.play('right');
 			facing = 'right';
@@ -269,11 +299,16 @@ function blockHit (body, bodyB, shapeA, shapeB, equation) {
 		if (body.sprite===null){ 
 			onGround = true; 
 			inTerrain++;
+			if (jumpTime!=0){
+				score += (game.time.now - jumpTime)/50;
+				jumpTime = 0;
+			}
 		}
 		else{
 			if (body.sprite.key == 'wave'){
 				//lose
 				console.log('lose');
+				game.state.start('main');
 			}
 		}
 	}
@@ -290,6 +325,13 @@ function blockUnHit (body, bodyB, shapeA, shapeB, equation) {
 		if (body.sprite===null){ 
 			onGround = false;
 			inTerrain--;
+			if (inTerrain<1){
+				jumpTime = game.time.now;
+				if (facing == 'right'){
+					facing = 'speedy';
+					player.animations.play('speedy');
+				}
+			}
 		}
 	}
 	else
