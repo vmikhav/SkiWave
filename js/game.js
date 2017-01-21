@@ -37,8 +37,10 @@ var inTerrain=0;
 var forceVector = 0;
 var rotation = 0;
 
-var startTime, jumpTime, score;
+var startTime, jumpTime, score = 0;
 var scoreLabel;
+
+var endType = "";
 
 var mainState = {preload: preload, create: create, update: update};
 game.state.add('main', mainState); 
@@ -48,12 +50,12 @@ function create() {
 	inTerrain=0;
 	forceVector = 0;
 	rotation = 0;
-	oldSpeed = 0;
+	
 	onGround = false;	
 	facing = 'left';
 	isTap = false;
 	jumpTimer = 0;
-	startTime=0; jumpTime=0; score=0;
+	startTime=0; 
 
 	/*
 	background = game.add.sprite(0, 0, 'background');
@@ -64,8 +66,13 @@ function create() {
 	background.width = game.width;
 	*/
 
+	if (endType == 'die' || endType == ''){
+		score = 0;
+		oldSpeed = 0;
+		jumpTime=0;
+	}
 
-	scoreLabel = game.add.text(100, 20, '0', {font: '24px Arial', fill: '#fff'});
+	scoreLabel = game.add.text(100, 20, score, {font: '24px Arial', fill: '#fff'});
 	scoreLabel.fixedToCamera = true;
 
 	/*
@@ -178,7 +185,7 @@ function create() {
 	player = game.add.sprite(150, 200, 'dude');
 	player.animations.add('speedy', [8, 9, 10], 10, true);
 	player.animations.add('turn', [0, 1, 2], 10, true);
-	player.animations.add('right', [3, 4, 5, 6, 7], 10, true);
+	player.animations.add('right', [7, 3, 4, 5, 6, 7], 10, true);
 
 	game.physics.p2.enable(player);
 	
@@ -187,7 +194,7 @@ function create() {
 	//var boxMaterial = game.physics.p2.createMaterial('worldMaterial');
 
 	player.body.damping = 0.1;
-	player.body.angularDamping = 0.5;
+	player.body.angularDamping = 0.65;
 	player.body.collideWorldBounds = true;
 	
 	
@@ -195,6 +202,10 @@ function create() {
 	//player.body.dynamic = true;
 	//player.body.setMaterial(spriteMaterial);
 	player.body.mass = 0.5;
+
+	if (endType == 'win'){
+		player.body.velocity.x = oldSpeed;
+	}
 
 	game.camera.follow(player);
 	player.body.onBeginContact.add(blockHit, this);
@@ -215,10 +226,11 @@ function create() {
 
 function update() {
 
+	if (player.body.velocity.x > 1000){player.body.velocity.x = 1000;}
+
 	if (Math.abs(player.body.velocity.x)>20){score += (game.time.now - startTime)/1000; scoreLabel.setText(Math.ceil(score));}
 	startTime = game.time.now;
-	wave.body.force.x=100;
-	console.log(score);
+	wave.body.force.x = 120;
 
 	forceVector = player.body.velocity.y * player.body.velocity.x;
 	rotation = player.body.rotation%PI;
@@ -232,8 +244,8 @@ function update() {
 			}
 		}
 		else if (forceVector > 0){
-			if (rotation<-0.1 && oldSpeed*player.body.velocity.x>0){
-				//console.log("goal2");
+			if (rotation<-0.1 && (player.body.velocity.y<0 && player.body.velocity.y>-5) && isTap==false){
+				//console.log("goal2", rotation, player.body.velocity.x, player.body.velocity.y);
 				player.body.rotation=0;
 				player.body.angularForce=75;
 			}
@@ -243,8 +255,9 @@ function update() {
 		}
 		else if (forceVector < 0){
 			if (rotation>0.1){
-				//console.log("goal3", rotation);
-				player.body.rotation=0;
+				//console.log("goal3", rotation, player.body.velocity.x, player.body.velocity.y);
+				if (rotation>0.5){player.body.rotation=0;}
+				else{player.body.rotation=-PI4/3;}
 				player.body.angularForce=-75;
 			}
 			else if (rotation<-PI2){
@@ -319,6 +332,7 @@ function blockHit (body, bodyB, shapeA, shapeB, equation) {
 			if (body.sprite.key == 'wave'){
 				//lose
 				console.log('lose');
+				endType = 'die';
 				game.state.start('main');
 			}
 		}
@@ -327,6 +341,9 @@ function blockHit (body, bodyB, shapeA, shapeB, equation) {
 	{
 		//win;
 		console.log("win");
+		endType = 'win';
+		oldSpeed = player.body.velocity.x;
+		game.state.start('main');
 	}
 
 }
