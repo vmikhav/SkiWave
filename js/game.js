@@ -13,13 +13,14 @@ function preload() {
 	game.load.spritesheet('dude', './img/pilot_animation.png', 100, 100);
 	game.load.spritesheet('wave', './img/wave.png', 1100, 1000);
 	game.load.image('menu', './img/buttons.png', 270, 180);
-
+	game.load.spritesheet('bonus', './img/bonus.png', 70, 70);
 	game.load.spritesheet('nothlights', './img/nothlights.png', 500, 300);
 
 }
 
 var player, background;
 var nothlights = [];
+var bonus = [];
 var facing = 'left';
 var isTap = false;
 var jumpTimer = 0;
@@ -132,17 +133,17 @@ function create() {
 		// Then add the menu
         console.log(player.position.x);
         var centerXPos = (player.position.x > w / 2) ? player.position.x : w / 2;
-		menu = game.add.sprite(centerXPos, h / 2, 'menu');
-		menu.anchor.setTo(0.5, 0.5);
+		//menu = game.add.sprite(centerXPos, h / 2, 'menu');
+		//menu.anchor.setTo(0.5, 0.5);
 
 		// And a label to illustrate which menu item was chosen. (This is not necessary)
-		choiseLabel = game.add.text(centerXPos, h - 150, 'Click outside menu to continue', {font: '30px Arial', fill: '#fff'});
+		choiseLabel = game.add.text(centerXPos, h / 2, 'Pause', {font: '156px super_mario_256regular', fill: '#fff800'});
 		choiseLabel.anchor.setTo(0.5, 0.5);
 	}
 
 	function destroyMenu() {
 		// Remove the menu and the label
-		menu.destroy();
+		//menu.destroy();
         // backgroundmenu.destroy();
 		choiseLabel.destroy();
 		background.destroy();
@@ -156,7 +157,7 @@ function create() {
 		// Only act if paused
 		if (game.paused) {
 			// Calculate the corners of the menu
-			var x1 = w / 2 - 270 / 2, x2 = w / 2 + 270 / 2,
+			/*var x1 = w / 2 - 270 / 2, x2 = w / 2 + 270 / 2,
 					y1 = h / 2 - 180 / 2, y2 = h / 2 + 180 / 2;
 
 			// Check if the click was inside the menu
@@ -174,9 +175,9 @@ function create() {
 				// Display the choice
 				choiseLabel.text = 'You chose menu item: ' + choisemap[choise];
 			}
-			else {
+			else {*/
 				destroyMenu();
-			}
+			//}
 		}
 	};
 
@@ -255,6 +256,15 @@ function create() {
 
 	game.input.onDown.add(onTap, this);
 	game.input.onUp.add(onUnTap, this);
+
+	bonus.length = 0;
+	for(var i=0; i<5; i++){
+		bonus.push(game.add.sprite(1000+Math.ceil(Math.random()*130000), 20, 'bonus'));
+		game.physics.p2.enable(bonus[i]);
+		bonus[i].body.collideWorldBounds = true;
+		bonus[i].body.fixedRotation = false;
+		bonus[i].body.mass = 0.1;
+	}
 
 	//startTime = game.time.now;
 	startTime = player.body.x;
@@ -379,6 +389,11 @@ function blockHit (body, bodyB, shapeA, shapeB, equation) {
 				console.log('lose');
 				endType = 'die';
 				game.state.start('main');
+			}
+			else if (body.sprite.key == 'bonus'){
+				body.sprite.destroy();
+				score += 300; 
+				inTerrain++;
 			}
 		}
 	}
