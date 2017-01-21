@@ -26,6 +26,7 @@ var PI = 3.14;
 var PI2 = 8*PI/18;
 var PI3 = PI/3;
 var PI4 = PI/4;
+var PI5 = PI/30;
 var oldSpeed = 0;
 
 var onGround = false;
@@ -75,7 +76,7 @@ function create() {
 
 	scoreLabel = game.add.text(w / 2, 80, score, {font: '128px super_mario_256regular', fill: '#fff800'});
 	scoreLabel.fixedToCamera = true;
-
+	scoreLabel.anchor.setTo(0.5, 0);
 
 
 	/*
@@ -83,10 +84,12 @@ function create() {
 	 */
 
 	// Create a label to use as a button
-	pause_label = game.add.text(w - w * 0.1, 20, 'Pause', {font: '32px super_mario_256regular', fill: '#fff800'});
+	pause_label = game.add.text(w - w * 0.1, 80, "", {font: '32px super_mario_256regular', fill: '#fff800'});
 	pause_label.inputEnabled = true;
 	pause_label.fixedToCamera = true;
 	pause_label.events.onInputUp.add(pause);
+	pause_label.anchor.setTo(0.5, 0);
+	
 
 	// Add a input listener that can help us return from being paused
 	game.input.onDown.add(unpause, self);
@@ -202,7 +205,7 @@ function create() {
 	player = game.add.sprite(150, 200, 'dude');
 	player.animations.add('speedy', [8, 9, 10], 10, true);
 	player.animations.add('turn', [0, 1, 2], 10, true);
-	player.animations.add('right', [7, 3, 4, 5, 6, 7], 10, true);
+	player.animations.add('right', [7, 3, 4, 5, 6], 10, true);
 
 	game.physics.p2.enable(player);
 	
@@ -211,7 +214,7 @@ function create() {
 	//var boxMaterial = game.physics.p2.createMaterial('worldMaterial');
 
 	player.body.damping = 0.1;
-	player.body.angularDamping = 0.65;
+	player.body.angularDamping = 0.5;
 	player.body.collideWorldBounds = true;
 	
 	
@@ -222,6 +225,9 @@ function create() {
 
 	if (endType == 'win'){
 		player.body.velocity.x = oldSpeed;
+	}
+	else{
+		player.body.velocity.x = 30;
 	}
 
 	game.camera.follow(player);
@@ -237,16 +243,24 @@ function create() {
 	game.input.onDown.add(onTap, this);
 	game.input.onUp.add(onUnTap, this);
 
-	startTime = game.time.now;
+	//startTime = game.time.now;
+	startTime = player.body.x;
+
+	pause_label.setText("Pause");
 
 }
 
 function update() {
 
-	if (player.body.velocity.x > 1000){player.body.velocity.x = 1000;}
+	if (player.body.velocity.x > 1500){player.body.velocity.x = 1500;}
 
-	if (Math.abs(player.body.velocity.x)>20){score += (game.time.now - startTime)/1000; scoreLabel.setText(Math.ceil(score));}
-	startTime = game.time.now;
+	if (Math.abs(player.body.velocity.x)>20){
+		score += (player.body.x - startTime)/500; scoreLabel.setText(Math.ceil(score)); 
+		if (score<10){
+			pause_label.setText("Pause");
+		}
+	}
+	startTime = player.body.x;
 	wave.body.force.x = 120;
 
 	forceVector = player.body.velocity.y * player.body.velocity.x;
@@ -283,8 +297,8 @@ function update() {
 		}
 	}
 	else{
-		if (rotation>PI4){player.body.rotation=PI4-0.05;}
-		else if (rotation<-PI4){player.body.rotation=-PI4+0.05;}
+		if (rotation<-PI4){player.body.rotation=-PI4+0.05;}
+		else if (rotation>PI5 && jumpTimer > 0 && (game.time.now - jumpTimer) > 50){player.body.rotation=PI5; player.body.angularForce=-30;}
 	}
 	oldSpeed = player.body.velocity.x;
 
@@ -297,7 +311,7 @@ function update() {
 				player.body.angularForce=-50;
 			}*/
 		}
-		player.body.force.x = 750;
+		player.body.force.x = 900;
 		if (facing != 'right' && inTerrain)
 		{
 			player.animations.play('right');
@@ -340,9 +354,10 @@ function blockHit (body, bodyB, shapeA, shapeB, equation) {
 			onGround = true; 
 			inTerrain++;
 			if (jumpTime!=0){
-				score += (game.time.now - jumpTime)/50;
+				score += (player.body.x - jumpTime)/10;
 				jumpTime = 0;
 				scoreLabel.setText(Math.ceil(score));
+				jumpTimer = 0;
 			}
 		}
 		else{
@@ -371,11 +386,12 @@ function blockUnHit (body, bodyB, shapeA, shapeB, equation) {
 			onGround = false;
 			inTerrain--;
 			if (inTerrain<1){
-				jumpTime = game.time.now;
+				jumpTime = player.body.x || 0;
 				if (facing == 'right'){
 					facing = 'speedy';
 					player.animations.play('speedy');
 				}
+				jumpTimer = game.time.now;
 			}
 		}
 	}
