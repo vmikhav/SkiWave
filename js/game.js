@@ -9,7 +9,7 @@ function preload() {
 	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 	game.load.tilemap('map', './map/test.json', null, Phaser.Tilemap.TILED_JSON);
 	game.load.image('kenney', './img/kenney.png');
-	// game.load.image('background', './img/background.png');
+	game.load.image('background', './img/background.png');
 	game.load.spritesheet('dude', './img/pilot_animation.png', 100, 100);
 	game.load.spritesheet('wave', './img/wave.png', 1232, 1000);
 	game.load.image('menu', './img/buttons.png', 270, 180);
@@ -65,15 +65,17 @@ function create() {
 	*/
 
 
-	scoreLabel = game.add.text(100, 20, '0', {font: '24px Arial', fill: '#fff'});
+	scoreLabel = game.add.text(w / 2, 80, '0', {font: '128px super_mario_256regular', fill: '#fff800'});
 	scoreLabel.fixedToCamera = true;
+
+
 
 	/*
 	 Code for the pause menu
 	 */
 
 	// Create a label to use as a button
-	pause_label = game.add.text(w - 100, 20, 'Pause', {font: '24px Arial', fill: '#fff'});
+	pause_label = game.add.text(w - w * 0.1, 20, 'Pause', {font: '32px super_mario_256regular', fill: '#fff800'});
 	pause_label.inputEnabled = true;
 	pause_label.fixedToCamera = true;
 	pause_label.events.onInputUp.add(pause);
@@ -95,7 +97,15 @@ function create() {
 		// When the paus button is pressed, we pause the game
 		game.paused = true;
 
-        // backgroundmenu = game.add.sprite(0, 0, 800, 600, 'backgroundmenu', 'backgroundmenu');
+		var backgrundXPos = (player.position.x > w / 2) ? player.position.x - w / 2 : 0;
+		background = game.add.sprite(backgrundXPos, 0, 'background');
+		background.height = game.height;
+		background.width = game.width;
+
+		// background = game.add.sprite(0, 0, 'background');
+		// background.fixedToCamera = true;
+
+				// backgroundmenu = game.add.sprite(0, 0, 800, 600, 'backgroundmenu', 'backgroundmenu');
 		// Then add the menu
         console.log(player.position.x);
         var centerXPos = (player.position.x > w / 2) ? player.position.x : w / 2;
@@ -112,6 +122,7 @@ function create() {
 		menu.destroy();
         // backgroundmenu.destroy();
 		choiseLabel.destroy();
+		background.destroy();
 
 		// Unpause the game
 		game.paused = false;
