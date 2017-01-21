@@ -1,8 +1,8 @@
 var innerWidth = window.innerWidth;
 var innerHeight = window.innerHeight;
 var gameRatio = innerWidth/innerHeight;
-var w = Math.floor(1000*gameRatio);
-var h = 1000;
+var w = Math.floor(910*gameRatio);
+var h = 910;
 var game = new Phaser.Game(w, h, Phaser.AUTO, 'phaser-example', { preload: preload, create: create, update: update, render: render });
 
 function preload() {
@@ -10,7 +10,7 @@ function preload() {
 	game.load.tilemap('map', './map/test.json', null, Phaser.Tilemap.TILED_JSON);
 	game.load.image('kenney', './img/kenney.png');
 	//game.load.image('background', './img/background.png');
-	game.load.spritesheet('dude', './img/pilot_animation.png', 64, 64);
+	game.load.spritesheet('dude', './img/pilot_animation.png', 100, 100);
 	game.load.spritesheet('wave', './img/wave.png', 1232, 1000);
 	game.load.image('menu', './img/buttons.png', 270, 180);
 
@@ -38,6 +38,7 @@ var forceVector = 0;
 var rotation = 0;
 
 var startTime, jumpTime, score;
+var scoreLabel;
 
 var mainState = {preload: preload, create: create, update: update};
 game.state.add('main', mainState); 
@@ -62,6 +63,11 @@ function create() {
 	background.height = game.height;
 	background.width = game.width;
 	*/
+
+
+	scoreLabel = game.add.text(100, 20, '0', {font: '24px Arial', fill: '#fff'});
+	scoreLabel.fixedToCamera = true;
+
 	/*
 	 Code for the pause menu
 	 */
@@ -169,7 +175,7 @@ function create() {
 	game.physics.p2.world.setGlobalStiffness(1e5);
 	
 
-	player = game.add.sprite(100, 200, 'dude');
+	player = game.add.sprite(150, 200, 'dude');
 	player.animations.add('speedy', [8, 9, 10], 10, true);
 	player.animations.add('turn', [0, 1, 2], 10, true);
 	player.animations.add('right', [3, 4, 5, 6, 7], 10, true);
@@ -197,6 +203,9 @@ function create() {
 	//cursors = game.input.keyboard.createCursorKeys();
 	//jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 
+	game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onDown.add(onTap, this);
+	game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onUp.add(onUnTap, this);
+
 	game.input.onDown.add(onTap, this);
 	game.input.onUp.add(onUnTap, this);
 
@@ -206,7 +215,7 @@ function create() {
 
 function update() {
 
-	if (Math.abs(player.body.velocity.x)>10){score += (game.time.now - startTime)/2500; }
+	if (Math.abs(player.body.velocity.x)>20){score += (game.time.now - startTime)/1000; scoreLabel.setText(Math.ceil(score));}
 	startTime = game.time.now;
 	wave.body.force.x=100;
 	console.log(score);
@@ -283,6 +292,7 @@ function update() {
 		}
 		
 	}
+
 }
 
 function onTap(pointer, doubleTap) {
@@ -302,6 +312,7 @@ function blockHit (body, bodyB, shapeA, shapeB, equation) {
 			if (jumpTime!=0){
 				score += (game.time.now - jumpTime)/50;
 				jumpTime = 0;
+				scoreLabel.setText(Math.ceil(score));
 			}
 		}
 		else{
