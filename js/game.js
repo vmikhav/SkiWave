@@ -537,7 +537,7 @@ function loseCreate() {
 
 	var playLabel = game.add.text(w / 2, h - 150, "click here or press spaceBar", {font: '54px super_mario_256regular', fill: '#fff800'});
 	playLabel.inputEnabled = true;
-	playLabel.events.onInputDown.add(function(){game.state.start('menu');});
+	playLabel.events.onInputDown.add(loseNavigate);
 	playLabel.anchor.setTo(0.5, 0.5);
 
 	jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
@@ -545,6 +545,8 @@ function loseCreate() {
 
 function loseUpdate() {
 	if (jumpButton.isDown){
-		game.state.start('main');
+		loseNavigate();
 	}
 }
+
+function loseNavigate() { game.state.start('main');}
