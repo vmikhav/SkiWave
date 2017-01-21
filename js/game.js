@@ -386,7 +386,7 @@ function blockUnHit (body, bodyB, shapeA, shapeB, equation) {
 			onGround = false;
 			inTerrain--;
 			if (inTerrain<1){
-				jumpTime = player.body.x || 0;
+				jumpTime = player.position.x || 0;
 				if (facing == 'right'){
 					facing = 'speedy';
 					player.animations.play('speedy');
