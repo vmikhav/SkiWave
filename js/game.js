@@ -9,7 +9,7 @@ function preload() {
 	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 	game.load.tilemap('map', './map/test.json', null, Phaser.Tilemap.TILED_JSON);
 	game.load.image('kenney', './img/kenney.png');
-	//game.load.image('background', './img/background.png');
+	// game.load.image('background', './img/background.png');
 	game.load.spritesheet('dude', './img/pilot_animation.png', 100, 100);
 	game.load.spritesheet('wave', './img/wave.png', 1232, 1000);
 	game.load.image('menu', './img/buttons.png', 270, 180);
@@ -91,21 +91,26 @@ function create() {
 	}
 
 	function pause(event) {
+
 		// When the paus button is pressed, we pause the game
 		game.paused = true;
 
+        // backgroundmenu = game.add.sprite(0, 0, 800, 600, 'backgroundmenu', 'backgroundmenu');
 		// Then add the menu
-		menu = game.add.sprite(w / 2, h / 2, 'menu');
+        console.log(player.position.x);
+        var centerXPos = (player.position.x > w / 2) ? player.position.x : w / 2;
+		menu = game.add.sprite(centerXPos, h / 2, 'menu');
 		menu.anchor.setTo(0.5, 0.5);
 
 		// And a label to illustrate which menu item was chosen. (This is not necessary)
-		choiseLabel = game.add.text(w / 2, h - 150, 'Click outside menu to continue', {font: '30px Arial', fill: '#fff'});
+		choiseLabel = game.add.text(centerXPos, h - 150, 'Click outside menu to continue', {font: '30px Arial', fill: '#fff'});
 		choiseLabel.anchor.setTo(0.5, 0.5);
 	}
 
 	function destroyMenu() {
 		// Remove the menu and the label
 		menu.destroy();
+        // backgroundmenu.destroy();
 		choiseLabel.destroy();
 
 		// Unpause the game
