@@ -647,7 +647,7 @@ function tweetscore(){        //share score on twitter
 function vkscore(){        //share score on twitter        
 	var url  = 'http://vk.com/share.php?';
 	url += 'url='          + encodeURIComponent(window.location.href);
-	url += '&title='       + encodeURIComponent('SkiWave');
+	url += '&title='       + encodeURIComponent('I scored '+score+' at SkiWave');
 	url += '&description=' + encodeURIComponent('I scored '+score+' at SkiWave');
 	url += '&noparse=true';
 	window.open(url,'','menubar=no,toolbar=0,status=0,width=786,height=436');
