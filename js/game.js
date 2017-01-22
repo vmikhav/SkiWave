@@ -50,10 +50,12 @@ var scoreLabel, restartLabel;
 
 var endType = "";
 
-var aboutText = "HI! I`M ABOUT TEXT.";
+var aboutText = "«CLIMATE CHANGE IS NO LONGER FAR-OFF PROBLEM; IT IS HAPPENING HERE. IT IS HAPPENING NOW» BARACK OBAMA.\n\nWE'RE LIVING IN CHANGING WORLD AND WE — YOU AND ME, DECIDE WHAT OUR WORLD WILL LOOK IN THE FUTURE. ONE OF THE PROBLEM YOU SHOULD LOOK INTO AND TRY TO SOLVE BY YOURSELF IS GLOBAL WARMING. OUR GAME IS DESIGNED TO GROW AWARENESS OF THE PROBLEM AND HAVE SOME FUN.\n\nCREATED BY: VOLODYMYR MIKHAV, KYRYLO HAVRYLENKO";
 
 var mainState = {preload: preload, create: create, update: update};
 game.state.add('main', mainState); 
+
+var music;
 
 function create() {
 	//init
@@ -468,6 +470,8 @@ function startPreload() {
 	game.load.image('vk', './img/kv.png');
 	game.load.image('fb', './img/bf.png');
 
+	//game.load.audio('boden', ['./img/Last_Dawn.mp3']);
+
 	var loadingText = game.add.text(w/2, h/2, 'loading... 0%', { font: '64px super_mario_256regular', fill: '#fff800' });
 	loadingText.anchor.setTo(0.5, 0.5);
 
@@ -487,6 +491,8 @@ function startPreload() {
 }
 
 function startCreate() {
+	//music = game.add.audio('boden');
+	//music.play('',0,1,true);
 	game.time.events.remove(timerEvt);
 	game.state.start('menu');
 }
@@ -501,6 +507,7 @@ function menuPreload() {
 }
 
 function menuCreate() {
+	//if (!music.isPlaying){ music.play('',0,1,true); } 
 	background = game.add.sprite(0, 0, 'background');
 	background.fixedToCamera = true;
 	background.x = 0;
@@ -629,7 +636,7 @@ function aboutCreate() {
 	filter.height = game.height;
 	filter.width = game.width;
 
-	var aboutScoreLabel = game.add.text(game.world.centerX, game.world.centerY, aboutText, {font: '48px super_mario_256regular', fill: '#fff800', align: 'center', wordWrap: true, wordWrapWidth: w / 2});
+	var aboutScoreLabel = game.add.text(game.world.centerX, game.world.centerY, aboutText, {font: '48px super_mario_256regular', fill: '#fff800', align: 'center', wordWrap: true, wordWrapWidth: 2*w / 3});
 	aboutScoreLabel.anchor.setTo(0.5);
 
 	var playLabel = game.add.text(w - 250, 75, "BACK", {font: '48px super_mario_256regular', fill: '#fff800'});
