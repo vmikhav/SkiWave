@@ -32,6 +32,7 @@ var PI2 = 8*PI/18;
 var PI3 = PI/3;
 var PI4 = PI/4;
 var PI5 = PI/30;
+var PI6 = PI/6;
 var oldSpeed = 0;
 var waveSpeed;
 
@@ -79,12 +80,12 @@ function create() {
 	if (endType == 'die' || endType == ''){
 		score = 0;
 		oldSpeed = 0;
-		waveSpeed = 115;
+		waveSpeed = 110;
 	}
 
 	nothlights.length = 0;
-	for (var i=0; i<13; i++){
-		nothlights.push(game.add.sprite(10000*i+Math.ceil(Math.random()*1000), Math.ceil(Math.random()*50), 'nothlights'));
+	for (var i=0; i<6; i++){
+		nothlights.push(game.add.sprite(6000*i+Math.ceil(Math.random()*1000), Math.ceil(Math.random()*50), 'nothlights'));
 		nothlights[i].animations.add('nothlights', [0, 1, 2, 3, 4], 10, true);
 		nothlights[i].animations.play('nothlights');
 	}
@@ -265,7 +266,7 @@ function create() {
 
 	bonus.length = 0;
 	for(var i=0; i<5; i++){
-		bonus.push(game.add.sprite(1000+Math.ceil(Math.random()*130000), 20, 'bonus'));
+		bonus.push(game.add.sprite(1000+Math.ceil(Math.random()*33000), 20, 'bonus'));
 		game.physics.p2.enable(bonus[i]);
 		bonus[i].body.collideWorldBounds = true;
 		bonus[i].body.fixedRotation = false;
@@ -281,13 +282,10 @@ function create() {
 
 function update() {
 
-	if (player.body.velocity.x > 1500){player.body.velocity.x = 1500;}
+	if (player.body.velocity.x > 1800){player.body.velocity.x = 1800;}
 
 	if (Math.abs(player.body.velocity.x)>20){
 		score += (player.body.x - startTime)/500; scoreLabel.setText(Math.ceil(score)); 
-		if (score<10){
-			pause_label.setText("Pause");
-		}
 	}
 	startTime = player.body.x;
 	wave.body.force.x = waveSpeed;
@@ -327,20 +325,24 @@ function update() {
 	}
 	else{
 		if (rotation<-PI4){player.body.rotation=-PI4+0.05;}
-		else if (rotation>PI5 && jumpTimer > 0 && (game.time.now - jumpTimer) > 50){player.body.rotation=PI5; player.body.angularForce=-30;}
+		else if (rotation>0 && jumpTimer > 0 && (game.time.now - jumpTimer) > 50){player.body.rotation=0; player.body.angularForce=-40;}
 	}
 	oldSpeed = player.body.velocity.x;
 
 	if (isTap){
 		if (inTerrain){
-			if (player.body.velocity.y>0){
+			if (player.body.velocity.y>50 && rotation > 0){
 				player.body.force.y += 500;
+				//player.body.angularForce=-20;			
+			}
+			else if (rotation < PI6){
+				player.body.force.y -= 200;
 			}
 			/*else if (player.body.velocity.y<-5){
 				player.body.angularForce=-50;
 			}*/
 		}
-		player.body.force.x = 900;
+		player.body.force.x = 1000;
 		if (facing != 'right' && inTerrain)
 		{
 			player.animations.play('right');
@@ -407,9 +409,11 @@ function blockHit (body, bodyB, shapeA, shapeB, equation) {
 	{
 		//win;
 		//console.log("win");
-		endType = 'win';
-		oldSpeed = player.body.velocity.x;
-		game.state.start('main');
+		if (player.body.y>100){
+			endType = 'win';
+			oldSpeed = player.body.velocity.x;
+			game.state.start('main');
+		}
 	}
 
 }
@@ -462,6 +466,7 @@ function startPreload() {
 	game.load.spritesheet('tv', './img/tv.png', 400, 400);
 	game.load.image('twitter', './img/twtr.png');
 	game.load.image('vk', './img/kv.png');
+	game.load.image('fb', './img/bf.png');
 
 	var loadingText = game.add.text(w/2, h/2, 'loading... 0%', { font: '64px super_mario_256regular', fill: '#fff800' });
 	loadingText.anchor.setTo(0.5, 0.5);
@@ -540,6 +545,7 @@ function losePreload() {
 	game.load.image('filter', './img/filter.png');
 	game.load.image('twitter', './img/twtr.png');
 	game.load.image('vk', './img/kv.png');
+	game.load.image('fb', './img/bf.png');
 
 	score = Math.ceil(score);
 }
@@ -559,7 +565,7 @@ function loseCreate() {
 	filter.height = game.height;
 	filter.width = game.width;
 
-	var tv = game.add.sprite(w / 2, h / 2 + 25, 'tv');
+	var tv = game.add.sprite(w / 2, h / 2 + 35, 'tv');
 	tv.anchor.setTo(0.5, 0.5);
 	tv.animations.add('tv', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 10, true);
 	tv.animations.play('tv');
@@ -572,15 +578,20 @@ function loseCreate() {
 	playLabel.events.onInputDown.add(loseNavigate);
 	playLabel.anchor.setTo(0.5, 0.5);
 
-	var twim = game.add.sprite(w/2 + 45, 220, 'twitter');
+	var twim = game.add.sprite(w/2 - 145, 250, 'twitter');
 	twim.anchor.set(0.5);
 	twim.inputEnabled = true;
 	twim.events.onInputDown.add(tweetscore, this);
 
-	var vkim = game.add.sprite(w/2 - 45, 220, 'vk');
+	var vkim = game.add.sprite(w/2, 250, 'vk');
 	vkim.anchor.set(0.5);
 	vkim.inputEnabled = true;
 	vkim.events.onInputDown.add(vkscore, this);
+
+	var fbim = game.add.sprite(w/2 + 145, 250, 'fb');
+	fbim.anchor.set(0.5);
+	fbim.inputEnabled = true;
+	fbim.events.onInputDown.add(fbscore, this);
 
 	jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 }
@@ -645,6 +656,14 @@ function tweetscore(){        //share score on twitter
 	window.open(finaltweet,'_blank');
 }
 function vkscore(){        //share score on twitter        
+	var url  = 'http://vk.com/share.php?';
+	url += 'url='          + encodeURIComponent(window.location.href);
+	url += '&title='       + encodeURIComponent('I scored '+score+' at SkiWave');
+	url += '&description=' + encodeURIComponent('I scored '+score+' at SkiWave');
+	url += '&noparse=true';
+	window.open(url,'','menubar=no,toolbar=0,status=0,width=786,height=436');
+}
+function fbscore(){        //share score on twitter        
 	var url  = 'http://vk.com/share.php?';
 	url += 'url='          + encodeURIComponent(window.location.href);
 	url += '&title='       + encodeURIComponent('I scored '+score+' at SkiWave');
