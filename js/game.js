@@ -49,6 +49,8 @@ var scoreLabel, restartLabel;
 
 var endType = "";
 
+var aboutText = "HI! I`M ABOUT TEXT.";
+
 var mainState = {preload: preload, create: create, update: update};
 game.state.add('main', mainState); 
 
@@ -443,6 +445,7 @@ var menuState = {preload: menuPreload, create: menuCreate, update: menuUpdate};
 game.state.add('menu', menuState); 
 var loseState = {preload: losePreload, create: loseCreate, update: loseUpdate};
 game.state.add('lose', loseState); 
+game.state.add('about', {preload: aboutPreload, create: aboutCreate, update: aboutUpdate}); 
 
 function startPreload() {
 	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
@@ -457,6 +460,8 @@ function startPreload() {
 	game.load.spritesheet('bonus', './img/bonus.png', 70, 70);
 	game.load.spritesheet('nothlights', './img/nothlights.png', 500, 300);
 	game.load.spritesheet('tv', './img/tv.png', 400, 400);
+	game.load.image('twitter', './img/twtr.png');
+	game.load.image('vk', './img/kv.png');
 
 	var loadingText = game.add.text(w/2, h/2, 'loading... 0%', { font: '64px super_mario_256regular', fill: '#fff800' });
 	loadingText.anchor.setTo(0.5, 0.5);
@@ -508,14 +513,14 @@ function menuCreate() {
 	var gameLabel = game.add.text(w / 2, 200, 'SkiWave', {font: '164px super_mario_256regular', fill: '#fff800'});
 	gameLabel.anchor.setTo(0.5, 0.5);
 
-	var playLabel = game.add.text(w / 2, h / 2 , "click here or press\nspaceBar to start", {font: '54px super_mario_256regular', fill: '#FFB200'});
+	var playLabel = game.add.text(w / 2, h / 2 , "click here or press\nspaceBar to start", {font: '54px super_mario_256regular', fill: '#FFB200', align: 'center'});
 	playLabel.inputEnabled = true;
 	playLabel.events.onInputDown.add(function(){game.state.start('main');});
 	playLabel.anchor.setTo(0.5, 0.5);
 
 	var aboutLabel = game.add.text(w / 2, h / 2 + 250, "aBout", {font: '54px super_mario_256regular', fill: '#fff800'});
 	aboutLabel.inputEnabled = true;
-	aboutLabel.events.onInputDown.add(function(){game.state.start('main');});
+	aboutLabel.events.onInputDown.add(function(){game.state.start('about');});
 	aboutLabel.anchor.setTo(0.5, 0.5);
 
 	jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
@@ -532,9 +537,9 @@ function losePreload() {
 
 	game.load.image('background', './img/background.png');
 	game.load.spritesheet('tv', './img/tv.png', 400, 400);
-	game.load.image('background', './img/background.png');
 	game.load.image('filter', './img/filter.png');
-
+	game.load.image('twitter', './img/twtr.png');
+	game.load.image('vk', './img/kv.png');
 
 	score = Math.ceil(score);
 }
@@ -554,7 +559,7 @@ function loseCreate() {
 	filter.height = game.height;
 	filter.width = game.width;
 
-	var tv = game.add.sprite(w / 2, h / 2, 'tv');
+	var tv = game.add.sprite(w / 2, h / 2 + 25, 'tv');
 	tv.anchor.setTo(0.5, 0.5);
 	tv.animations.add('tv', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 10, true);
 	tv.animations.play('tv');
@@ -567,6 +572,16 @@ function loseCreate() {
 	playLabel.events.onInputDown.add(loseNavigate);
 	playLabel.anchor.setTo(0.5, 0.5);
 
+	var twim = game.add.sprite(w/2 + 45, 220, 'twitter');
+	twim.anchor.set(0.5);
+	twim.inputEnabled = true;
+	twim.events.onInputDown.add(tweetscore, this);
+
+	var vkim = game.add.sprite(w/2 - 45, 220, 'vk');
+	vkim.anchor.set(0.5);
+	vkim.inputEnabled = true;
+	vkim.events.onInputDown.add(vkscore, this);
+
 	jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 }
 
@@ -577,3 +592,63 @@ function loseUpdate() {
 }
 
 function loseNavigate() { game.state.start('main');}
+
+function aboutPreload() {
+	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+
+	game.load.image('background', './img/background.png');
+	game.load.image('filter', './img/filter.png');
+
+
+	score = Math.ceil(score);
+}
+
+function aboutCreate() {
+	background = game.add.sprite(0, 0, 'background');
+	background.fixedToCamera = true;
+	background.x = 0;
+	background.y = 0;
+	background.height = game.height;
+	background.width = game.width;
+
+	filter = game.add.sprite(0, 0, 'filter');
+	filter.fixedToCamera = true;
+	filter.x = 0;
+	filter.y = 0;
+	filter.height = game.height;
+	filter.width = game.width;
+
+	var aboutScoreLabel = game.add.text(game.world.centerX, game.world.centerY, aboutText, {font: '48px super_mario_256regular', fill: '#fff800', align: 'center', wordWrap: true, wordWrapWidth: w / 2});
+	aboutScoreLabel.anchor.setTo(0.5);
+
+	var playLabel = game.add.text(w - 250, 75, "BACK", {font: '48px super_mario_256regular', fill: '#fff800'});
+	playLabel.inputEnabled = true;
+	playLabel.events.onInputDown.add(aboutNavigate);
+	//playLabel.anchor.setTo(0.5, 0.5);
+
+	jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+}
+
+function aboutUpdate() {
+	if (jumpButton.isDown){
+		aboutNavigate();
+	}
+}
+
+function aboutNavigate() { game.state.start('menu');}
+
+
+function tweetscore(){        //share score on twitter        
+	var tweetbegin = 'http://twitter.com/home?status=';
+	var tweettxt = 'I scored '+score+' at SkiWave - ' + window.location.href + '.';
+	var finaltweet = tweetbegin +encodeURIComponent(tweettxt);
+	window.open(finaltweet,'_blank');
+}
+function vkscore(){        //share score on twitter        
+	var url  = 'http://vk.com/share.php?';
+	url += 'url='          + encodeURIComponent(window.location.href);
+	url += '&title='       + encodeURIComponent('SkiWave');
+	url += '&description=' + encodeURIComponent('I scored '+score+' at SkiWave');
+	url += '&noparse=true';
+	window.open(url,'','menubar=no,toolbar=0,status=0,width=786,height=436');
+}
