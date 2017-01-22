@@ -82,7 +82,7 @@ function create() {
 	if (endType == 'die' || endType == ''){
 		score = 0;
 		oldSpeed = 0;
-		waveSpeed = 110;
+		waveSpeed = 190;
 	}
 
 	nothlights.length = 0;
@@ -194,7 +194,7 @@ function create() {
 
 	game.stage.backgroundColor = '#2d2d2d';
 
-	wave = game.add.sprite(-1000, 600, 'wave');
+	wave = game.add.sprite(-600, 600, 'wave');
 	wave.animations.add('waving', [0, 1, 2, 3, 4], 10, true);
 	game.physics.p2.enable(wave);
 	wave.body.data.gravityScale = 0;
@@ -247,7 +247,7 @@ function create() {
 
 	if (endType == 'win'){
 		player.body.velocity.x = oldSpeed;
-		waveSpeed+=10;
+		waveSpeed+=30;
 	}
 	else{
 		player.body.velocity.x = 30;
@@ -557,6 +557,7 @@ function losePreload() {
 	score = Math.ceil(score);
 }
 
+var spaceFlag=0; var spaceFlag2;
 function loseCreate() {
 	background = game.add.sprite(0, 0, 'background');
 	background.fixedToCamera = true;
@@ -601,12 +602,21 @@ function loseCreate() {
 	fbim.events.onInputDown.add(fbscore, this);
 
 	jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+
+	spaceFlag=game.time.now; spaceFlag2 = true;
+	if (jumpButton.isDown){spaceFlag=true;}
 }
 
 function loseUpdate() {
 	if (jumpButton.isDown){
-		loseNavigate();
+		if ((game.time.now - spaceFlag) < 500){
+			spaceFlag2 = false;
+		}
+		if (spaceFlag2){
+			loseNavigate();
+		}
 	}
+	else {spaceFlag2=true;}
 }
 
 function loseNavigate() { game.state.start('main');}
