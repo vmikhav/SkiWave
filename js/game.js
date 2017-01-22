@@ -16,7 +16,7 @@ function preload() {
 	game.load.image('menu', './img/buttons.png', 270, 180);
 	game.load.spritesheet('bonus', './img/bonus.png', 70, 70);
 	game.load.spritesheet('nothlights', './img/nothlights.png', 500, 300);
-
+	game.load.image('filter', './img/filter.png');
 }
 
 var player, background, filter;
@@ -45,7 +45,7 @@ var forceVector = 0;
 var rotation = 0;
 
 var startTime, jumpTime, score = 0;
-var scoreLabel;
+var scoreLabel, restartLabel;
 
 var endType = "";
 
@@ -127,6 +127,11 @@ function create() {
 		background.height = game.height;
 		background.width = game.width;
 
+		filter = game.add.sprite(backgrundXPos, 0, 'filter');
+		filter.fixedToCamera = true;
+		filter.height = game.height;
+		filter.width = game.width;
+
 		// background = game.add.sprite(0, 0, 'background');
 		// background.fixedToCamera = true;
 
@@ -138,8 +143,13 @@ function create() {
 		//menu.anchor.setTo(0.5, 0.5);
 
 		// And a label to illustrate which menu item was chosen. (This is not necessary)
-		choiseLabel = game.add.text(centerXPos, h / 2, 'Pause', {font: '156px super_mario_256regular', fill: '#fff800'});
+		choiseLabel = game.add.text(centerXPos, h / 2 - 50, 'Pause', {font: '156px super_mario_256regular', fill: '#fff800'});
 		choiseLabel.anchor.setTo(0.5, 0.5);
+
+		restartLabel = game.add.text(centerXPos, h / 2 + 250, "restart", {font: '54px super_mario_256regular', fill: '#fff800'});
+		//restartLabel.inputEnabled = true;
+		//restartLabel.events.onInputDown.add(function(){ endType = 'lose'; game.state.start('menu');});
+		restartLabel.anchor.setTo(0.5, 0.5);
 	}
 
 	function destroyMenu() {
@@ -148,7 +158,8 @@ function create() {
 				// backgroundmenu.destroy();
 		choiseLabel.destroy();
 		background.destroy();
-
+		filter.destroy();
+		restartLabel.destroy();
 		// Unpause the game
 		game.paused = false;
 	}
@@ -158,27 +169,19 @@ function create() {
 		// Only act if paused
 		if (game.paused) {
 			// Calculate the corners of the menu
-			/*var x1 = w / 2 - 270 / 2, x2 = w / 2 + 270 / 2,
-					y1 = h / 2 - 180 / 2, y2 = h / 2 + 180 / 2;
+			var x1 = w / 2 - 270 / 2, x2 = w / 2 + 270 / 2,
+					y1 = h / 2 + 250  - 60 / 2, y2 = h / 2 + 250 + 60 / 2;
 
 			// Check if the click was inside the menu
 			if (event.x > x1 && event.x < x2 && event.y > y1 && event.y < y2) {
 				// The choicemap is an array that will help us see which item was clicked
-				var choisemap = ['one', 'two', 'three', 'four', 'five', 'six'];
-
-				// Get menu local coordinates for the click
-				var x = event.x - x1,
-						y = event.y - y1;
-
-				// Calculate the choice
-				var choise = Math.floor(x / 90) + 3 * Math.floor(y / 90);
-
-				// Display the choice
-				choiseLabel.text = 'You chose menu item: ' + choisemap[choise];
-			}
-			else {*/
 				destroyMenu();
-			//}
+				endType = 'die';
+				game.state.start('main');
+			}
+			else {
+				destroyMenu();
+			}
 		}
 	};
 
@@ -505,7 +508,7 @@ function menuCreate() {
 	var gameLabel = game.add.text(w / 2, 200, 'SkiWave', {font: '164px super_mario_256regular', fill: '#fff800'});
 	gameLabel.anchor.setTo(0.5, 0.5);
 
-	var playLabel = game.add.text(w / 2, h / 2 , "click here or press\nspaceBar to start", {font: '54px super_mario_256regular', fill: '#FFD800'});
+	var playLabel = game.add.text(w / 2, h / 2 , "click here or press\nspaceBar to start", {font: '54px super_mario_256regular', fill: '#FFB200'});
 	playLabel.inputEnabled = true;
 	playLabel.events.onInputDown.add(function(){game.state.start('main');});
 	playLabel.anchor.setTo(0.5, 0.5);
