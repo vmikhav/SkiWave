@@ -3,20 +3,25 @@ var innerHeight = window.innerHeight;
 var gameRatio = innerWidth/innerHeight;
 var w = Math.floor(910*gameRatio);
 var h = 910;
-var game = new Phaser.Game(w, h, Phaser.AUTO, 'phaser-example', { preload: preload, create: create, update: update, render: render });
+var game = new Phaser.Game(w, h, Phaser.AUTO, 'ShiWave', { preload: startPreload, create: startCreate, update: startUpdate, render: render });
 
 function preload() {
 	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 	game.load.tilemap('map', './map/test.json', null, Phaser.Tilemap.TILED_JSON);
 	game.load.image('kenney', './img/kenney.png');
 	game.load.image('background', './img/background.png');
+	game.load.image('filter', './img/filter.png');
 	game.load.spritesheet('dude', './img/pilot_animation.png', 100, 100);
-	game.load.spritesheet('wave', './img/wave.png', 1232, 1000);
+	game.load.spritesheet('wave', './img/wave.png', 1100, 1000);
 	game.load.image('menu', './img/buttons.png', 270, 180);
-
+	game.load.spritesheet('bonus', './img/bonus.png', 70, 70);
+	game.load.spritesheet('nothlights', './img/nothlights.png', 500, 300);
+	game.load.image('filter', './img/filter.png');
 }
 
-var player, background;
+var player, background, filter;
+var nothlights = [];
+var bonus = [];
 var facing = 'left';
 var isTap = false;
 var jumpTimer = 0;
@@ -28,6 +33,7 @@ var PI3 = PI/3;
 var PI4 = PI/4;
 var PI5 = PI/30;
 var oldSpeed = 0;
+var waveSpeed;
 
 var onGround = false;
 
@@ -39,9 +45,11 @@ var forceVector = 0;
 var rotation = 0;
 
 var startTime, jumpTime, score = 0;
-var scoreLabel;
+var scoreLabel, restartLabel;
 
 var endType = "";
+
+var aboutText = "HI! I`M ABOUT TEXT.";
 
 var mainState = {preload: preload, create: create, update: update};
 game.state.add('main', mainState); 
@@ -56,6 +64,7 @@ function create() {
 	facing = 'left';
 	isTap = false;
 	jumpTimer = 0;
+	jumpTime=0;
 	startTime=0; 
 
 	/*
@@ -70,7 +79,14 @@ function create() {
 	if (endType == 'die' || endType == ''){
 		score = 0;
 		oldSpeed = 0;
-		jumpTime=0;
+		waveSpeed = 115;
+	}
+
+	nothlights.length = 0;
+	for (var i=0; i<13; i++){
+		nothlights.push(game.add.sprite(10000*i+Math.ceil(Math.random()*1000), Math.ceil(Math.random()*50), 'nothlights'));
+		nothlights[i].animations.add('nothlights', [0, 1, 2, 3, 4], 10, true);
+		nothlights[i].animations.play('nothlights');
 	}
 
 
@@ -113,28 +129,39 @@ function create() {
 		background.height = game.height;
 		background.width = game.width;
 
+		filter = game.add.sprite(backgrundXPos, 0, 'filter');
+		filter.fixedToCamera = true;
+		filter.height = game.height;
+		filter.width = game.width;
+
 		// background = game.add.sprite(0, 0, 'background');
 		// background.fixedToCamera = true;
 
-				// backgroundmenu = game.add.sprite(0, 0, 800, 600, 'backgroundmenu', 'backgroundmenu');
+		// backgroundmenu = game.add.sprite(0, 0, 800, 600, 'backgroundmenu', 'backgroundmenu');
 		// Then add the menu
-        console.log(player.position.x);
-        var centerXPos = (player.position.x > w / 2) ? player.position.x : w / 2;
-		menu = game.add.sprite(centerXPos, h / 2, 'menu');
-		menu.anchor.setTo(0.5, 0.5);
+				//console.log(player.position.x);
+		var centerXPos = (player.position.x > w / 2) ? player.position.x : w / 2;
+		//menu = game.add.sprite(centerXPos, h / 2, 'menu');
+		//menu.anchor.setTo(0.5, 0.5);
 
 		// And a label to illustrate which menu item was chosen. (This is not necessary)
-		choiseLabel = game.add.text(centerXPos, h - 150, 'Click outside menu to continue', {font: '30px Arial', fill: '#fff'});
+		choiseLabel = game.add.text(centerXPos, h / 2 - 50, 'Pause', {font: '156px super_mario_256regular', fill: '#fff800'});
 		choiseLabel.anchor.setTo(0.5, 0.5);
+
+		restartLabel = game.add.text(centerXPos, h / 2 + 250, "restart", {font: '54px super_mario_256regular', fill: '#fff800'});
+		//restartLabel.inputEnabled = true;
+		//restartLabel.events.onInputDown.add(function(){ endType = 'lose'; game.state.start('menu');});
+		restartLabel.anchor.setTo(0.5, 0.5);
 	}
 
 	function destroyMenu() {
 		// Remove the menu and the label
-		menu.destroy();
-        // backgroundmenu.destroy();
+		//menu.destroy();
+				// backgroundmenu.destroy();
 		choiseLabel.destroy();
 		background.destroy();
-
+		filter.destroy();
+		restartLabel.destroy();
 		// Unpause the game
 		game.paused = false;
 	}
@@ -145,22 +172,14 @@ function create() {
 		if (game.paused) {
 			// Calculate the corners of the menu
 			var x1 = w / 2 - 270 / 2, x2 = w / 2 + 270 / 2,
-					y1 = h / 2 - 180 / 2, y2 = h / 2 + 180 / 2;
+					y1 = h / 2 + 250  - 60 / 2, y2 = h / 2 + 250 + 60 / 2;
 
 			// Check if the click was inside the menu
 			if (event.x > x1 && event.x < x2 && event.y > y1 && event.y < y2) {
 				// The choicemap is an array that will help us see which item was clicked
-				var choisemap = ['one', 'two', 'three', 'four', 'five', 'six'];
-
-				// Get menu local coordinates for the click
-				var x = event.x - x1,
-						y = event.y - y1;
-
-				// Calculate the choice
-				var choise = Math.floor(x / 90) + 3 * Math.floor(y / 90);
-
-				// Display the choice
-				choiseLabel.text = 'You chose menu item: ' + choisemap[choise];
+				destroyMenu();
+				endType = 'die';
+				game.state.start('main');
 			}
 			else {
 				destroyMenu();
@@ -225,6 +244,7 @@ function create() {
 
 	if (endType == 'win'){
 		player.body.velocity.x = oldSpeed;
+		waveSpeed+=10;
 	}
 	else{
 		player.body.velocity.x = 30;
@@ -242,6 +262,15 @@ function create() {
 
 	game.input.onDown.add(onTap, this);
 	game.input.onUp.add(onUnTap, this);
+
+	bonus.length = 0;
+	for(var i=0; i<5; i++){
+		bonus.push(game.add.sprite(1000+Math.ceil(Math.random()*130000), 20, 'bonus'));
+		game.physics.p2.enable(bonus[i]);
+		bonus[i].body.collideWorldBounds = true;
+		bonus[i].body.fixedRotation = false;
+		bonus[i].body.mass = 0.1;
+	}
 
 	//startTime = game.time.now;
 	startTime = player.body.x;
@@ -261,7 +290,7 @@ function update() {
 		}
 	}
 	startTime = player.body.x;
-	wave.body.force.x = 120;
+	wave.body.force.x = waveSpeed;
 
 	forceVector = player.body.velocity.y * player.body.velocity.x;
 	rotation = player.body.rotation%PI;
@@ -354,7 +383,7 @@ function blockHit (body, bodyB, shapeA, shapeB, equation) {
 			onGround = true; 
 			inTerrain++;
 			if (jumpTime!=0){
-				score += (player.body.x - jumpTime)/10;
+				score += (player.body.x - jumpTime)/25;
 				jumpTime = 0;
 				scoreLabel.setText(Math.ceil(score));
 				jumpTimer = 0;
@@ -363,16 +392,21 @@ function blockHit (body, bodyB, shapeA, shapeB, equation) {
 		else{
 			if (body.sprite.key == 'wave'){
 				//lose
-				console.log('lose');
+				
 				endType = 'die';
-				game.state.start('main');
+				game.state.start('lose');
+			}
+			else if (body.sprite.key == 'bonus'){
+				body.sprite.destroy();
+				score += 300; 
+				inTerrain++;
 			}
 		}
 	}
 	else
 	{
 		//win;
-		console.log("win");
+		//console.log("win");
 		endType = 'win';
 		oldSpeed = player.body.velocity.x;
 		game.state.start('main');
@@ -386,7 +420,7 @@ function blockUnHit (body, bodyB, shapeA, shapeB, equation) {
 			onGround = false;
 			inTerrain--;
 			if (inTerrain<1){
-				jumpTime = player.body.x || 0;
+				jumpTime = player.position.x || 0;
 				if (facing == 'right'){
 					facing = 'speedy';
 					player.animations.play('speedy');
@@ -404,4 +438,217 @@ function blockUnHit (body, bodyB, shapeA, shapeB, equation) {
 
 function render() {
 
+}
+
+var timerEvt;
+var menuState = {preload: menuPreload, create: menuCreate, update: menuUpdate};
+game.state.add('menu', menuState); 
+var loseState = {preload: losePreload, create: loseCreate, update: loseUpdate};
+game.state.add('lose', loseState); 
+game.state.add('about', {preload: aboutPreload, create: aboutCreate, update: aboutUpdate}); 
+
+function startPreload() {
+	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+
+	game.load.tilemap('map', './map/test.json', null, Phaser.Tilemap.TILED_JSON);
+	game.load.image('kenney', './img/kenney.png');
+	game.load.image('background', './img/background.png');
+	game.load.image('filter', './img/filter.png');
+	game.load.spritesheet('dude', './img/pilot_animation.png', 100, 100);
+	game.load.spritesheet('wave', './img/wave.png', 1100, 1000);
+	game.load.image('menu', './img/buttons.png', 270, 180);
+	game.load.spritesheet('bonus', './img/bonus.png', 70, 70);
+	game.load.spritesheet('nothlights', './img/nothlights.png', 500, 300);
+	game.load.spritesheet('tv', './img/tv.png', 400, 400);
+	game.load.image('twitter', './img/twtr.png');
+	game.load.image('vk', './img/kv.png');
+
+	var loadingText = game.add.text(w/2, h/2, 'loading... 0%', { font: '64px super_mario_256regular', fill: '#fff800' });
+	loadingText.anchor.setTo(0.5, 0.5);
+
+	var progressDisplay = 0;
+
+	timerEvt = game.time.events.loop(100, function (){
+		if(progressDisplay < 100){
+			if(progressDisplay < game.load.progress){
+				loadingText.text = 'loading... '+(game.load.progress)+'%';
+			}
+		}else{
+			loadingText.text = 'Ready, Go!';
+			game.time.events.remove(timerEvt);
+		}
+	}, this);
+	
+}
+
+function startCreate() {
+	game.time.events.remove(timerEvt);
+	game.state.start('menu');
+}
+
+function startUpdate() {}
+
+function menuPreload() {
+	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+
+	game.load.image('background', './img/background.png');
+	game.load.image('filter', './img/filter.png');
+}
+
+function menuCreate() {
+	background = game.add.sprite(0, 0, 'background');
+	background.fixedToCamera = true;
+	background.x = 0;
+	background.y = 0;
+	background.height = game.height;
+	background.width = game.width;
+
+	filter = game.add.sprite(0, 0, 'filter');
+	filter.fixedToCamera = true;
+	filter.x = 0;
+	filter.y = 0;
+	filter.height = game.height;
+	filter.width = game.width;
+
+	var gameLabel = game.add.text(w / 2, 200, 'SkiWave', {font: '164px super_mario_256regular', fill: '#fff800'});
+	gameLabel.anchor.setTo(0.5, 0.5);
+
+	var playLabel = game.add.text(w / 2, h / 2 , "click here or press\nspaceBar to start", {font: '54px super_mario_256regular', fill: '#FFB200', align: 'center'});
+	playLabel.inputEnabled = true;
+	playLabel.events.onInputDown.add(function(){game.state.start('main');});
+	playLabel.anchor.setTo(0.5, 0.5);
+
+	var aboutLabel = game.add.text(w / 2, h / 2 + 250, "aBout", {font: '54px super_mario_256regular', fill: '#fff800'});
+	aboutLabel.inputEnabled = true;
+	aboutLabel.events.onInputDown.add(function(){game.state.start('about');});
+	aboutLabel.anchor.setTo(0.5, 0.5);
+
+	jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+}
+
+function menuUpdate() {
+	if (jumpButton.isDown){
+		game.state.start('main');
+	}
+}
+
+function losePreload() {
+	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+
+	game.load.image('background', './img/background.png');
+	game.load.spritesheet('tv', './img/tv.png', 400, 400);
+	game.load.image('filter', './img/filter.png');
+	game.load.image('twitter', './img/twtr.png');
+	game.load.image('vk', './img/kv.png');
+
+	score = Math.ceil(score);
+}
+
+function loseCreate() {
+	background = game.add.sprite(0, 0, 'background');
+	background.fixedToCamera = true;
+	background.x = 0;
+	background.y = 0;
+	background.height = game.height;
+	background.width = game.width;
+
+	filter = game.add.sprite(0, 0, 'filter');
+	filter.fixedToCamera = true;
+	filter.x = 0;
+	filter.y = 0;
+	filter.height = game.height;
+	filter.width = game.width;
+
+	var tv = game.add.sprite(w / 2, h / 2 + 25, 'tv');
+	tv.anchor.setTo(0.5, 0.5);
+	tv.animations.add('tv', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 10, true);
+	tv.animations.play('tv');
+
+	var loseScoreLabel = game.add.text(w / 2, 150, "your score : "+score, {font: '54px super_mario_256regular', fill: '#fff800'});
+	loseScoreLabel.anchor.setTo(0.5, 0.5);
+
+	var playLabel = game.add.text(w / 2, h - 150, "click here or press spaceBar", {font: '54px super_mario_256regular', fill: '#fff800'});
+	playLabel.inputEnabled = true;
+	playLabel.events.onInputDown.add(loseNavigate);
+	playLabel.anchor.setTo(0.5, 0.5);
+
+	var twim = game.add.sprite(w/2 + 45, 220, 'twitter');
+	twim.anchor.set(0.5);
+	twim.inputEnabled = true;
+	twim.events.onInputDown.add(tweetscore, this);
+
+	var vkim = game.add.sprite(w/2 - 45, 220, 'vk');
+	vkim.anchor.set(0.5);
+	vkim.inputEnabled = true;
+	vkim.events.onInputDown.add(vkscore, this);
+
+	jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+}
+
+function loseUpdate() {
+	if (jumpButton.isDown){
+		loseNavigate();
+	}
+}
+
+function loseNavigate() { game.state.start('main');}
+
+function aboutPreload() {
+	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+
+	game.load.image('background', './img/background.png');
+	game.load.image('filter', './img/filter.png');
+
+
+	score = Math.ceil(score);
+}
+
+function aboutCreate() {
+	background = game.add.sprite(0, 0, 'background');
+	background.fixedToCamera = true;
+	background.x = 0;
+	background.y = 0;
+	background.height = game.height;
+	background.width = game.width;
+
+	filter = game.add.sprite(0, 0, 'filter');
+	filter.fixedToCamera = true;
+	filter.x = 0;
+	filter.y = 0;
+	filter.height = game.height;
+	filter.width = game.width;
+
+	var aboutScoreLabel = game.add.text(game.world.centerX, game.world.centerY, aboutText, {font: '48px super_mario_256regular', fill: '#fff800', align: 'center', wordWrap: true, wordWrapWidth: w / 2});
+	aboutScoreLabel.anchor.setTo(0.5);
+
+	var playLabel = game.add.text(w - 250, 75, "BACK", {font: '48px super_mario_256regular', fill: '#fff800'});
+	playLabel.inputEnabled = true;
+	playLabel.events.onInputDown.add(aboutNavigate);
+	//playLabel.anchor.setTo(0.5, 0.5);
+
+	jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+}
+
+function aboutUpdate() {
+	if (jumpButton.isDown){
+		aboutNavigate();
+	}
+}
+
+function aboutNavigate() { game.state.start('menu');}
+
+
+function tweetscore(){        //share score on twitter        
+	var tweetbegin = 'http://twitter.com/home?status=';
+	var tweettxt = 'I scored '+score+' at SkiWave - ' + window.location.href + '.';
+	var finaltweet = tweetbegin +encodeURIComponent(tweettxt);
+	window.open(finaltweet,'_blank');
+}
+function vkscore(){        //share score on twitter        
+	var url  = 'http://vk.com/share.php?';
+	url += 'url='          + encodeURIComponent(window.location.href);
+	url += '&title='       + encodeURIComponent('SkiWave');
+	url += '&description=' + encodeURIComponent('I scored '+score+' at SkiWave');
+	url += '&noparse=true';
+	window.open(url,'','menubar=no,toolbar=0,status=0,width=786,height=436');
 }
