@@ -453,6 +453,7 @@ function startPreload() {
 	game.load.image('menu', './img/buttons.png', 270, 180);
 	game.load.spritesheet('bonus', './img/bonus.png', 70, 70);
 	game.load.spritesheet('nothlights', './img/nothlights.png', 500, 300);
+	game.load.spritesheet('tv', './img/tv.png', 400, 400);
 
 	var loadingText = game.add.text(w/2, h/2, 'loading... 0%', { font: '64px super_mario_256regular', fill: '#fff800' });
 	loadingText.anchor.setTo(0.5, 0.5);
@@ -504,12 +505,12 @@ function menuCreate() {
 	var gameLabel = game.add.text(w / 2, 200, 'SkiWave', {font: '164px super_mario_256regular', fill: '#fff800'});
 	gameLabel.anchor.setTo(0.5, 0.5);
 
-	var playLabel = game.add.text(w / 2, h / 2 - 50, "click here or press\nspaceBar to start", {font: '54px super_mario_256regular', fill: '#FFD800'});
+	var playLabel = game.add.text(w / 2, h / 2 , "click here or press\nspaceBar to start", {font: '54px super_mario_256regular', fill: '#FFD800'});
 	playLabel.inputEnabled = true;
 	playLabel.events.onInputDown.add(function(){game.state.start('main');});
 	playLabel.anchor.setTo(0.5, 0.5);
 
-	var aboutLabel = game.add.text(w / 2, h / 2 + 150, "aBout", {font: '54px super_mario_256regular', fill: '#fff800'});
+	var aboutLabel = game.add.text(w / 2, h / 2 + 250, "aBout", {font: '54px super_mario_256regular', fill: '#fff800'});
 	aboutLabel.inputEnabled = true;
 	aboutLabel.events.onInputDown.add(function(){game.state.start('main');});
 	aboutLabel.anchor.setTo(0.5, 0.5);
@@ -527,11 +528,34 @@ function losePreload() {
 	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 
 	game.load.image('background', './img/background.png');
+	game.load.spritesheet('tv', './img/tv.png', 400, 400);
+	game.load.image('background', './img/background.png');
+	game.load.image('filter', './img/filter.png');
+
 
 	score = Math.ceil(score);
 }
 
 function loseCreate() {
+	background = game.add.sprite(0, 0, 'background');
+	background.fixedToCamera = true;
+	background.x = 0;
+	background.y = 0;
+	background.height = game.height;
+	background.width = game.width;
+
+	filter = game.add.sprite(0, 0, 'filter');
+	filter.fixedToCamera = true;
+	filter.x = 0;
+	filter.y = 0;
+	filter.height = game.height;
+	filter.width = game.width;
+
+	var tv = game.add.sprite(w / 2, h / 2, 'tv');
+	tv.anchor.setTo(0.5, 0.5);
+	tv.animations.add('tv', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 10, true);
+	tv.animations.play('tv');
+
 	var loseScoreLabel = game.add.text(w / 2, 150, "your score : "+score, {font: '54px super_mario_256regular', fill: '#fff800'});
 	loseScoreLabel.anchor.setTo(0.5, 0.5);
 
