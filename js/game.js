@@ -6,13 +6,13 @@ var h = 910;
 var game = new Phaser.Game(w, h, Phaser.AUTO, 'ShiWave', { preload: startPreload, create: startCreate, update: startUpdate, render: render });
 
 function preload() {
-	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+	game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;
 	game.load.tilemap('map', './map/test.json', null, Phaser.Tilemap.TILED_JSON);
 	game.load.image('kenney', './img/kenney.png');
 	game.load.image('background', './img/background.png');
 	game.load.image('filter', './img/filter.png');
 	game.load.spritesheet('dude', './img/pilot_animation.png', 100, 100);
-	game.load.spritesheet('wave', './img/wave.png', 1100, 1000);
+	game.load.spritesheet('wave', './img/wave.png', 1000, 1000);
 	game.load.image('menu', './img/buttons.png', 270, 180);
 	game.load.spritesheet('bonus', './img/bonus.png', 70, 70);
 	game.load.spritesheet('nothlights', './img/nothlights.png', 500, 300);
@@ -195,7 +195,7 @@ function create() {
 	game.stage.backgroundColor = '#2d2d2d';
 
 	wave = game.add.sprite(-600, 600, 'wave');
-	wave.animations.add('waving', [0, 1, 2, 3, 4], 10, true);
+	wave.animations.add('waving', [0, 1, 2, 3], 10, true);
 	game.physics.p2.enable(wave);
 	wave.body.data.gravityScale = 0;
 	wave.body.data.shapes[0].sensor = true;
@@ -246,8 +246,8 @@ function create() {
 	player.body.mass = 0.5;
 
 	if (endType == 'win'){
-		player.body.velocity.x = oldSpeed;
-		waveSpeed+=30;
+		player.body.velocity.x = Math.ceil(oldSpeed / 2);
+		waveSpeed+=25;
 	}
 	else{
 		player.body.velocity.x = 30;
@@ -461,16 +461,16 @@ function startPreload() {
 	game.load.image('background', './img/background.png');
 	game.load.image('filter', './img/filter.png');
 	game.load.spritesheet('dude', './img/pilot_animation.png', 100, 100);
-	game.load.spritesheet('wave', './img/wave.png', 1100, 1000);
+	game.load.spritesheet('wave', './img/wave.png', 1000, 1000);
 	game.load.image('menu', './img/buttons.png', 270, 180);
 	game.load.spritesheet('bonus', './img/bonus.png', 70, 70);
 	game.load.spritesheet('nothlights', './img/nothlights.png', 500, 300);
 	game.load.spritesheet('tv', './img/tv.png', 400, 400);
-	game.load.image('twitter', './img/twtr.png');
+	game.load.image('twitter', './img/trtw.png');
 	game.load.image('vk', './img/kv.png');
 	game.load.image('fb', './img/bf.png');
 
-	//game.load.audio('boden', ['./img/Last_Dawn.mp3']);
+	game.load.audio('boden', ['./img/Last_Dawn.mp3']);
 
 	var loadingText = game.add.text(w/2, h/2, 'loading... 0%', { font: '64px super_mario_256regular', fill: '#fff800' });
 	loadingText.anchor.setTo(0.5, 0.5);
@@ -491,8 +491,8 @@ function startPreload() {
 }
 
 function startCreate() {
-	//music = game.add.audio('boden');
-	//music.play('',0,1,true);
+	music = game.add.audio('boden');
+	music.play('',0,1,true);
 	game.time.events.remove(timerEvt);
 	game.state.start('menu');
 }
@@ -500,14 +500,19 @@ function startCreate() {
 function startUpdate() {}
 
 function menuPreload() {
-	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+	/*innerWidth = document.body.clientWidth;;
+	innerHeight = document.body.clientHeight;
+	gameRatio = innerWidth/innerHeight;
+	w = Math.floor(910*gameRatio);
+	game.scale.setGameSize(w, h);*/
+	game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;
 
 	game.load.image('background', './img/background.png');
 	game.load.image('filter', './img/filter.png');
 }
 
 function menuCreate() {
-	//if (!music.isPlaying){ music.play('',0,1,true); } 
+	if (!music.isPlaying){ music.play('',0,1,true); } 
 	background = game.add.sprite(0, 0, 'background');
 	background.fixedToCamera = true;
 	background.x = 0;
@@ -545,12 +550,12 @@ function menuUpdate() {
 }
 
 function losePreload() {
-	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+	game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;
 
 	game.load.image('background', './img/background.png');
 	game.load.spritesheet('tv', './img/tv.png', 400, 400);
 	game.load.image('filter', './img/filter.png');
-	game.load.image('twitter', './img/twtr.png');
+	game.load.image('twitter', './img/trtw.png');
 	game.load.image('vk', './img/kv.png');
 	game.load.image('fb', './img/bf.png');
 
@@ -591,15 +596,15 @@ function loseCreate() {
 	twim.inputEnabled = true;
 	twim.events.onInputDown.add(tweetscore, this);
 
-	var vkim = game.add.sprite(w/2, 250, 'vk');
+	/*var fbim = game.add.sprite(w/2, 250, 'fb');
+	fbim.anchor.set(0.5);
+	fbim.inputEnabled = true;
+	fbim.events.onInputDown.add(fbscore, this);*/
+
+	var vkim = game.add.sprite(w/2 + 145, 250, 'vk');
 	vkim.anchor.set(0.5);
 	vkim.inputEnabled = true;
 	vkim.events.onInputDown.add(vkscore, this);
-
-	var fbim = game.add.sprite(w/2 + 145, 250, 'fb');
-	fbim.anchor.set(0.5);
-	fbim.inputEnabled = true;
-	fbim.events.onInputDown.add(fbscore, this);
 
 	jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 
@@ -622,7 +627,7 @@ function loseUpdate() {
 function loseNavigate() { game.state.start('main');}
 
 function aboutPreload() {
-	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+	game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;
 
 	game.load.image('background', './img/background.png');
 	game.load.image('filter', './img/filter.png');
@@ -668,23 +673,23 @@ function aboutNavigate() { game.state.start('menu');}
 
 function tweetscore(){        //share score on twitter        
 	var tweetbegin = 'http://twitter.com/home?status=';
-	var tweettxt = 'I scored '+score+' at SkiWave - ' + window.location.href + '.';
+	var tweettxt = 'I have '+score+' points in SkiWave. I dare you to score more! Try now: ' + 'https://klerkoshel.itch.io/skiwave-a-day-on-the-melting-pole' + '.';
 	var finaltweet = tweetbegin +encodeURIComponent(tweettxt);
 	window.open(finaltweet,'_blank');
 }
 function vkscore(){        //share score on twitter        
 	var url  = 'http://vk.com/share.php?';
-	url += 'url='          + encodeURIComponent(window.location.href);
-	url += '&title='       + encodeURIComponent('I scored '+score+' at SkiWave');
-	url += '&description=' + encodeURIComponent('I scored '+score+' at SkiWave');
+	url += 'url='          + encodeURIComponent('https://klerkoshel.itch.io/skiwave-a-day-on-the-melting-pole');
+	url += '&title='       + encodeURIComponent('I have '+score+' points in SkiWave');
+	url += '&description=' + encodeURIComponent('I have '+score+' points in SkiWave. I dare you to score more!');
 	url += '&noparse=true';
 	window.open(url,'','menubar=no,toolbar=0,status=0,width=786,height=436');
 }
-function fbscore(){        //share score on twitter        
-	var url  = 'http://vk.com/share.php?';
-	url += 'url='          + encodeURIComponent(window.location.href);
-	url += '&title='       + encodeURIComponent('I scored '+score+' at SkiWave');
-	url += '&description=' + encodeURIComponent('I scored '+score+' at SkiWave');
-	url += '&noparse=true';
-	window.open(url,'','menubar=no,toolbar=0,status=0,width=786,height=436');
-}
+/*function fbscore(){        //share score on twitter        
+	FB.ui({ method: 'feed',
+		link: 'https://klerkoshel.itch.io/skiwave-a-day-on-the-melting-pole',
+		name: 'I have '+score+' points in SkiWave. I dare you to score more! Try now:',
+		description: 'SkiWave: A Day On The Melting Pole',
+		display: 'popup'
+	}, function (response){});  
+}*/
