@@ -1,13 +1,13 @@
 var innerWidth = window.innerWidth;
-var innerHeight = window.innerHeight + 100;
+var innerHeight = window.innerHeight;
 var gameRatio = innerWidth/innerHeight;
 var w = Math.floor(910*gameRatio);
 var h = 910;
 var game = new Phaser.Game(w, h, Phaser.AUTO, 'ShiWave', { preload: startPreload, create: startCreate, update: startUpdate, render: render });
 
 function preload() {
-	//EXACT_FIT
-	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+	game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
+	game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;
 	game.load.tilemap('map', './map/test.json', null, Phaser.Tilemap.TILED_JSON);
 	game.load.image('kenney', './img/kenney.png');
 	game.load.image('background', './img/background.png');
@@ -455,6 +455,8 @@ game.state.add('lose', loseState);
 game.state.add('about', {preload: aboutPreload, create: aboutCreate, update: aboutUpdate}); 
 
 function startPreload() {
+	game.scale.startFullScreen(false);
+	game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
 	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 
 	game.load.tilemap('map', './map/test.json', null, Phaser.Tilemap.TILED_JSON);
@@ -506,7 +508,7 @@ function menuPreload() {
 	gameRatio = innerWidth/innerHeight;
 	w = Math.floor(910*gameRatio);
 	game.scale.setGameSize(w, h);*/
-	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+	game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;
 
 	game.load.image('background', './img/background.png');
 	game.load.image('filter', './img/filter.png');
@@ -551,7 +553,8 @@ function menuUpdate() {
 }
 
 function losePreload() {
-	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+	game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
+	game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;
 
 	game.load.image('background', './img/background.png');
 	game.load.spritesheet('tv', './img/tv.png', 400, 400);
@@ -628,7 +631,8 @@ function loseUpdate() {
 function loseNavigate() { game.state.start('main');}
 
 function aboutPreload() {
-	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+	game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
+	game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;
 
 	game.load.image('background', './img/background.png');
 	game.load.image('filter', './img/filter.png');
